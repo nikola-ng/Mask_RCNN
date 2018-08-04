@@ -1841,7 +1841,12 @@ class MaskRCNN():
         self.mode = mode
         self.config = config
         self.model_dir = model_dir
-        self.set_log_dir()
+
+        # fix bug: prevent predicting/inference cases
+        # which re-create model causing re-create log dir
+        if mode == 'training':
+            self.set_log_dir()
+
         self.keras_model = self.build(mode=mode, config=config)
 
     def build(self, mode, config):

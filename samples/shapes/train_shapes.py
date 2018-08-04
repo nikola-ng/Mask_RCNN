@@ -228,43 +228,46 @@ for image_id in image_ids:
     mask, class_ids = dataset_train.load_mask(image_id)
     visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
 
-# Create model in training mode
-model = modellib.MaskRCNN(mode="training", config=config,
-                          model_dir=MODEL_DIR)
 
-# Which weights to start with?
-init_with = "coco"  # imagenet, coco, or last
-
-if init_with == "imagenet":
-    model.load_weights(model.get_imagenet_weights(), by_name=True)
-elif init_with == "coco":
-    # Load weights trained on MS COCO, but skip layers that
-    # are different due to the different number of classes
-    # See README for instructions to download the COCO weights
-    model.load_weights(COCO_MODEL_PATH, by_name=True,
-                       exclude=["mrcnn_class_logits", "mrcnn_bbox_fc",
-                                "mrcnn_bbox", "mrcnn_mask"])
-elif init_with == "last":
-    # Load the last model you trained and continue training
-    model.load_weights(model.find_last(), by_name=True)
-
-# Train the head branches
-# Passing layers="heads" freezes all layers except the head
-# layers. You can also pass a regular expression to select
-# which layers to train by name pattern.
-model.train(dataset_train, dataset_val,
-            learning_rate=config.LEARNING_RATE,
-            epochs=1,
-            layers='heads')
-
-
-# Save weights
-# Typically not needed because callbacks save after every epoch
-# Uncomment to save manually
-# model_path = os.path.join(MODEL_DIR, "mask_rcnn_shapes.h5")
-# model.keras_model.save_weights(model_path)
+# # Create model in training mode
+# model = modellib.MaskRCNN(mode="training", config=config,
+#                           model_dir=MODEL_DIR)
+#
+# # Which weights to start with?
+# init_with = "coco"  # imagenet, coco, or last
+#
+# if init_with == "imagenet":
+#     model.load_weights(model.get_imagenet_weights(), by_name=True)
+# elif init_with == "coco":
+#     # Load weights trained on MS COCO, but skip layers that
+#     # are different due to the different number of classes
+#     # See README for instructions to download the COCO weights
+#     model.load_weights(COCO_MODEL_PATH, by_name=True,
+#                        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc",
+#                                 "mrcnn_bbox", "mrcnn_mask"])
+# elif init_with == "last":
+#     # Load the last model you trained and continue training
+#     model.load_weights(model.find_last(), by_name=True)
+#
+# # Train the head branches
+# # Passing layers="heads" freezes all layers except the head
+# # layers. You can also pass a regular expression to select
+# # which layers to train by name pattern.
+# model.train(dataset_train, dataset_val,
+#             learning_rate=config.LEARNING_RATE,
+#             epochs=1,
+#             layers='heads')
+#
+#
+# # Save weights
+# # Typically not needed because callbacks save after every epoch
+# # Uncomment to save manually
+# # model_path = os.path.join(MODEL_DIR, "mask_rcnn_shapes.h5")
+# # model.keras_model.save_weights(model_path)
 
 class InferenceConfig(ShapesConfig):
+    # caution, BatchSize = GPU_COUNT * IMAGES_PER_GPU,
+    # BatchSize should be smaller than length of images
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 
@@ -286,6 +289,7 @@ print("Loading weights from ", model_path)
 model.load_weights(model_path, by_name=True)
 
 # Test on a random image
+# mark label
 image_id = random.choice(dataset_val.image_ids)
 original_image, image_meta, gt_class_id, gt_bbox, gt_mask = \
     modellib.load_image_gt(dataset_val, inference_config,
@@ -300,7 +304,11 @@ log("gt_mask", gt_mask)
 visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id,
                             dataset_train.class_names, figsize=(8, 8))
 
-results = model.detect([original_image], verbose=1)
+# mark confidence
+t1 = time.time()
+for i in range(10):
+    results = model.detect([original_image], verbose=1)
+print('Detect time: {}'.format((time.time() - t1) / 10))  # about 362ms on 128x128 image
 
 r = results[0]
 visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'],
