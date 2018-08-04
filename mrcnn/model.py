@@ -2273,7 +2273,13 @@ class MaskRCNN():
                 # Epoch number in file is 1-based, and in Keras code it's 0-based.
                 # So, adjust for that then increment by one to start from the next epoch
                 self.epoch = int(m.group(6)) - 1 + 1
-                print('Re-starting from epoch %d' % self.epoch)
+
+                # add notices
+                if self.mode == 'training':
+                    print('Re-starting training from epoch %d' % self.epoch)
+                else:
+                    print('Predicting from epoch %d' % self.epoch)
+
 
         # Directory for training logs
         self.log_dir = os.path.join(self.model_dir, "{}{:%Y%m%dT%H%M}".format(
