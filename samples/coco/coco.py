@@ -108,7 +108,7 @@ class CocoDataset(utils.Dataset):
         if auto_download is True:
             self.auto_download(dataset_dir, subset, year)
 
-        coco = COCO("{}/annotations/instances_{}{}.json_data".format(dataset_dir, subset, year))
+        coco = COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, subset, year))
         if subset == "minival" or subset == "valminusminival":
             subset = "val"
         image_dir = "{}/{}{}".format(dataset_dir, subset, year)
@@ -186,18 +186,18 @@ class CocoDataset(utils.Dataset):
         # Setup annotations data paths
         annDir = "{}/annotations".format(dataDir)
         if dataType == "minival":
-            annZipFile = "{}/instances_minival2014.json_data.zip".format(dataDir)
-            annFile = "{}/instances_minival2014.json_data".format(annDir)
-            annURL = "https://dl.dropboxusercontent.com/s/o43o90bna78omob/instances_minival2014.json_data.zip?dl=0"
+            annZipFile = "{}/instances_minival2014.json.zip".format(dataDir)
+            annFile = "{}/instances_minival2014.json".format(annDir)
+            annURL = "https://dl.dropboxusercontent.com/s/o43o90bna78omob/instances_minival2014.json.zip?dl=0"
             unZipDir = annDir
         elif dataType == "valminusminival":
-            annZipFile = "{}/instances_valminusminival2014.json_data.zip".format(dataDir)
-            annFile = "{}/instances_valminusminival2014.json_data".format(annDir)
-            annURL = "https://dl.dropboxusercontent.com/s/s3tw5zcg7395368/instances_valminusminival2014.json_data.zip?dl=0"
+            annZipFile = "{}/instances_valminusminival2014.json.zip".format(dataDir)
+            annFile = "{}/instances_valminusminival2014.json".format(annDir)
+            annURL = "https://dl.dropboxusercontent.com/s/s3tw5zcg7395368/instances_valminusminival2014.json.zip?dl=0"
             unZipDir = annDir
         else:
             annZipFile = "{}/annotations_trainval{}.zip".format(dataDir, dataYear)
-            annFile = "{}/instances_{}{}.json_data".format(annDir, dataType, dataYear)
+            annFile = "{}/instances_{}{}.json".format(annDir, dataType, dataYear)
             annURL = "http://images.cocodataset.org/annotations/annotations_trainval{}.zip".format(dataYear)
             unZipDir = dataDir
         # print("Annotations paths:"); print(annDir); print(annFile); print(annZipFile); print(annURL)

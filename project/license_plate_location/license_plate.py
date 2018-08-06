@@ -12,19 +12,19 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
 
     # Train a new model starting from pre-trained COCO weights
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=coco
+    python3 license_plate.py train --dataset=/path/to/license_plate/dataset --weights=coco
 
     # Resume training a model that you had trained earlier
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=last
+    python3 license_plate.py train --dataset=/path/to/license_plate/dataset --weights=last
 
     # Train a new model starting from ImageNet weights
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=imagenet
+    python3 license_plate.py train --dataset=/path/to/license_plate/dataset --weights=imagenet
 
     # Apply color splash to an image
-    python3 balloon.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
+    python3 license_plate.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
 
     # Apply color splash to video using the last weights you trained
-    python3 balloon.py splash --weights=last --video=<URL or path to file>
+    python3 license_plate.py splash --weights=last --video=<URL or path to file>
 """
 
 import os
@@ -54,19 +54,22 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 
 
-class BalloonConfig(Config):
+class LicensePlateConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "balloon"
+    NAME = "license_plate"
+
+    # NUMBER OF GPUs to use. For CPU training, use 1
+    GPU_COUNT = 4
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + balloon
+    NUM_CLASSES = 1 + 1  # Background + license_plate
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -79,15 +82,15 @@ class BalloonConfig(Config):
 #  Dataset
 ############################################################
 
-class BalloonDataset(utils.Dataset):
+class LicensePlateDataset(utils.Dataset):
 
-    def load_balloon(self, dataset_dir, subset):
-        """Load a subset of the Balloon dataset.
+    def load_license_plate(self, dataset_dir, subset):
+        """Load a subset of the LicensePlate dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("balloon", 1, "balloon")
+        self.add_class("license_plate", 1, "license_plate")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -108,7 +111,7 @@ class BalloonDataset(utils.Dataset):
         #   'size': 100202
         # }
         # We mostly care about the x and y coordinates of each region
-        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
+        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json_data")))
         annotations = list(annotations.values())  # don't need the dict keys
 
         # The VIA tool saves images in the JSON even if they don't have any
@@ -119,7 +122,7 @@ class BalloonDataset(utils.Dataset):
         for a in annotations:
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. There are stores in the
-            # shape_attributes (see json format above)
+            # shape_attributes (see json_data format above)
             polygons = [r['shape_attributes'] for r in a['regions'].values()]
 
             # load_mask() needs the image size to convert polygons to masks.
@@ -130,7 +133,7 @@ class BalloonDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "balloon",
+                "license_plate",
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
@@ -143,9 +146,9 @@ class BalloonDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
-        # If not a balloon dataset image, delegate to parent class.
+        # If not a license_plate dataset image, delegate to parent class.
         image_info = self.image_info[image_id]
-        if image_info["source"] != "balloon":
+        if image_info["source"] != "license_plate":
             return super(self.__class__, self).load_mask(image_id)
 
         # Convert polygons to a bitmap mask of shape
@@ -165,7 +168,7 @@ class BalloonDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "balloon":
+        if info["source"] == "license_plate":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
@@ -174,13 +177,13 @@ class BalloonDataset(utils.Dataset):
 def train(model):
     """Train the model."""
     # Training dataset.
-    dataset_train = BalloonDataset()
-    dataset_train.load_balloon(args.dataset, "train")
+    dataset_train = LicensePlateDataset()
+    dataset_train.load_license_plate(args.dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = BalloonDataset()
-    dataset_val.load_balloon(args.dataset, "val")
+    dataset_val = LicensePlateDataset()
+    dataset_val.load_license_plate(args.dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -275,13 +278,13 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='Train Mask R-CNN to detect balloons.')
+        description='Train Mask R-CNN to detect license_plates.')
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'splash'")
     parser.add_argument('--dataset', required=False,
-                        metavar="/path/to/balloon/dataset/",
-                        help='Directory of the Balloon dataset')
+                        metavar="/path/to/license_plate/dataset/",
+                        help='Directory of the LicensePlate dataset')
     parser.add_argument('--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
@@ -310,9 +313,9 @@ if __name__ == '__main__':
 
     # Configurations
     if args.command == "train":
-        config = BalloonConfig()
+        config = LicensePlateConfig()
     else:
-        class InferenceConfig(BalloonConfig):
+        class InferenceConfig(LicensePlateConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1

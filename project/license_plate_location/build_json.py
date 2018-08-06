@@ -7,14 +7,14 @@ class ImageLabels:
     def __init__(self, json_path):
         self.json_path = json_path
         if not os.path.exists(json_path):
+            # create json if not exists
             open(json_path, 'w').close()
-            self.first_time = True
-            self.json_file = open(json_path, 'rb')
-            self.json_data = {}
         else:
-            self.first_time = False
             self.json_file = open(json_path, 'rb')
-            self.json_data = json.loads(self.json_file.read().decode('utf-8'))
+            try:
+                self.json_data = json.loads(self.json_file.read().decode('utf-8'))
+            except json.decoder.JSONDecodeError:
+                self.json_data = {}
 
     def add_serial(self, filename='', size=0,
                    region_type='polygon', region_points=[],
@@ -23,7 +23,7 @@ class ImageLabels:
         serial_name = filename + str(size)
         try:
             key = self.json_data[serial_name]
-        except:
+        except KeyError:
             serial = {
                 # 'filename': filename.encode('unicode_escape'),  # translate Chinese characters into unicode
                 'filename': filename,

@@ -63,5 +63,8 @@ for p in pl:
 
                                     # dump label
                                     file_size = os.path.getsize(img_path)
-                                    il.add_serial('plate_openalpr', file_size, 'polygon',
+                                    il.add_serial(plate_openalpr + '_{}'.format(img_p), file_size, 'polygon',
                                                   [pt1, pt2,pt3, pt4])
+
+il.update()
+il.close()
