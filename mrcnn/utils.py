@@ -30,7 +30,7 @@ COCO_MODEL_URL = "https://github.com/matterport/Mask_RCNN/releases/download/v2.0
 ############################################################
 
 def extract_bboxes(mask):
-    """Compute bounding boxes from masks.
+    """Compute bounding boxes from masksboxes from masks.
     mask: [height, width, num_instances]. Mask pixels are either 1 or 0.
 
     Returns: bbox array [num_instances, (y1, x1, y2, x2)].

@@ -166,9 +166,12 @@ class LicensePlateDataset(utils.Dataset):
         mask = np.zeros([info["height"], info["width"], len(info["polygons"])],
                         dtype=np.uint8)
         for i, p in enumerate(info["polygons"]):
-            # Get indexes of pixels inside the polygon and set them to 1
-            rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-            mask[rr, cc, i] = 1
+            try:
+                # Get indexes of pixels inside the polygon and set them to 1
+                rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
+                mask[rr, cc, i] = 1
+            except IndexError:
+                pass
 
         # Return mask, and array of class IDs of each instance. Since we have
         # one class ID only, we return an array of 1s
@@ -335,7 +338,10 @@ if __name__ == '__main__':
     config.display()
 
     # Create model
-    if args.command == "train":
+    if args.weights.lower() == "last":
+        model = modellib.MaskRCNN(mode="resume_training", config=config,
+                                  model_dir=args.logs)
+    elif args.command == "train":
         model = modellib.MaskRCNN(mode="training", config=config,
                                   model_dir=args.logs)
     else:

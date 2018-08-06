@@ -1837,8 +1837,10 @@ class MaskRCNN():
         config: A Sub-class of the Config class
         model_dir: Directory to save training logs and trained weights
         """
-        assert mode in ['training', 'inference']
+        assert mode in ['training', 'inference', 'resume_training']
         self.mode = mode
+        if self.mode == 'resume_training':
+            self.mode = 'training'
         self.config = config
         self.model_dir = model_dir
 
@@ -1847,7 +1849,7 @@ class MaskRCNN():
         if mode == 'training':
             self.set_log_dir()
 
-        self.keras_model = self.build(mode=mode, config=config)
+        self.keras_model = self.build(mode=self.mode, config=config)
 
     def build(self, mode, config):
         """Build Mask R-CNN architecture.
