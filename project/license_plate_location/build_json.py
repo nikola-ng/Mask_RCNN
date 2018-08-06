@@ -9,7 +9,7 @@ class ImageLabels:
         if not os.path.exists(json_path):
             # create json if not exists
             open(json_path, 'w').close()
-            
+
         self.json_file = open(json_path, 'rb')
         try:
             self.json_data = json.loads(self.json_file.read().decode('utf-8'))

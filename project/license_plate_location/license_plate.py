@@ -49,6 +49,7 @@ COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
+
 ############################################################
 #  Configurations
 ############################################################
@@ -123,7 +124,15 @@ class LicensePlateDataset(utils.Dataset):
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. There are stores in the
             # shape_attributes (see json format above)
-            polygons = [r['shape_attributes'] for r in a['regions'].values()]
+
+            # bug fix, auto fit json config
+            # because vgg image annotation 2.0 change 'regions' from dict to list
+            try:
+                # old version, dict
+                polygons = [r['shape_attributes'] for r in a['regions'].values()]
+            except AttributeError:
+                # new version, list
+                polygons = [r['shape_attributes'] for r in a['regions']]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -282,10 +291,10 @@ if __name__ == '__main__':
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'splash'")
-    parser.add_argument('--dataset', required=False,
+    parser.add_argument('-d', '--dataset', required=False,
                         metavar="/path/to/license_plate/dataset/",
                         help='Directory of the LicensePlate dataset')
-    parser.add_argument('--weights', required=True,
+    parser.add_argument('-w', '--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False,
@@ -304,8 +313,8 @@ if __name__ == '__main__':
     if args.command == "train":
         assert args.dataset, "Argument --dataset is required for training"
     elif args.command == "splash":
-        assert args.image or args.video,\
-               "Provide --image or --video to apply color splash"
+        assert args.image or args.video, \
+            "Provide --image or --video to apply color splash"
 
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
@@ -320,6 +329,8 @@ if __name__ == '__main__':
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
+
+
         config = InferenceConfig()
     config.display()
 
