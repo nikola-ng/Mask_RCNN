@@ -9,12 +9,12 @@ class ImageLabels:
         if not os.path.exists(json_path):
             # create json if not exists
             open(json_path, 'w').close()
-        else:
-            self.json_file = open(json_path, 'rb')
-            try:
-                self.json_data = json.loads(self.json_file.read().decode('utf-8'))
-            except json.decoder.JSONDecodeError:
-                self.json_data = {}
+            
+        self.json_file = open(json_path, 'rb')
+        try:
+            self.json_data = json.loads(self.json_file.read().decode('utf-8'))
+        except json.decoder.JSONDecodeError:
+            self.json_data = {}
 
     def add_serial(self, filename='', size=0,
                    region_type='polygon', region_points=[],
@@ -23,7 +23,7 @@ class ImageLabels:
         serial_name = filename + str(size)
         try:
             key = self.json_data[serial_name]
-        except KeyError:
+        except KeyError or AttributeError:
             serial = {
                 # 'filename': filename.encode('unicode_escape'),  # translate Chinese characters into unicode
                 'filename': filename,

@@ -111,7 +111,7 @@ class LicensePlateDataset(utils.Dataset):
         #   'size': 100202
         # }
         # We mostly care about the x and y coordinates of each region
-        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json_data")))
+        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
         annotations = list(annotations.values())  # don't need the dict keys
 
         # The VIA tool saves images in the JSON even if they don't have any
@@ -122,7 +122,7 @@ class LicensePlateDataset(utils.Dataset):
         for a in annotations:
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. There are stores in the
-            # shape_attributes (see json_data format above)
+            # shape_attributes (see json format above)
             polygons = [r['shape_attributes'] for r in a['regions'].values()]
 
             # load_mask() needs the image size to convert polygons to masks.

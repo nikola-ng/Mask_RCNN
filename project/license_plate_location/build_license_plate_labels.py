@@ -8,7 +8,7 @@ from project.license_plate_location.build_json import ImageLabels
 
 raw_images_path = '/home/public/car_exam/raw_images'
 raw_marked_images_path = '/home/admin/github/Mask_RCNN/datasets/license_plate/raw'
-json_label_path = '/home/admin/github/Mask_RCNN/datasets/license_plate/raw/via_license_plate_regions.json'
+json_label_path = '/home/admin/github/Mask_RCNN/datasets/license_plate/raw/via_region_data.json'
 
 KEY = {
     'license_plate': ['0111', '0112', '0164', '0322', '0323', '0348', '0351', '0352']
