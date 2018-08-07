@@ -35,6 +35,8 @@ import numpy as np
 import skimage.draw
 
 # Root directory of the project
+from callbacks.trainingmonitor import TrainMonitor
+
 ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
@@ -77,6 +79,9 @@ class LicensePlateConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
+
+    # custom
+    LEARNING_RATE = 0.001
 
 
 ############################################################
@@ -203,9 +208,15 @@ def train(model):
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
     print("Training network heads")
+
+    # add train monitor
+    callbacks = [TrainMonitor(model.log_dir + '/monitor.png',
+                              jsonPath=model.log_dir + '/monitor.json',
+                              startAt=model.epoch)]
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=30,
+                epochs=70,
+                custom_callbacks=callbacks,
                 layers='heads')
 
 
@@ -300,14 +311,14 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
-    parser.add_argument('--logs', required=False,
+    parser.add_argument('-l', '--logs', required=False,
                         default=DEFAULT_LOGS_DIR,
                         metavar="/path/to/logs/",
                         help='Logs and checkpoints directory (default=logs/)')
-    parser.add_argument('--image', required=False,
+    parser.add_argument('-i', '--image', required=False,
                         metavar="path or URL to image",
                         help='Image to apply the color splash effect on')
-    parser.add_argument('--video', required=False,
+    parser.add_argument('-v', '--video', required=False,
                         metavar="path or URL to video",
                         help='Video to apply the color splash effect on')
     args = parser.parse_args()
