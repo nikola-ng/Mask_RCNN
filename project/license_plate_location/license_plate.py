@@ -80,8 +80,17 @@ class LicensePlateConfig(Config):
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
 
-    # custom
-    LEARNING_RATE = 0.001
+    # custom history
+    # 1-35
+    # LEARNING_RATE = 0.001
+    # EPOCH = 35  # train till EPOCH xx, doesn't mean training another xx EPOCHs
+    # 35-50
+    # LEARNING_RATE = 0.0001
+    # EPOCH = 50
+    # 50-70
+    LEARNING_RATE = 0.0001
+    LEARNING_MOMENTUM = 0.6
+    EPOCH = 70
 
 
 ############################################################
@@ -215,7 +224,7 @@ def train(model):
                               startAt=model.epoch)]
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=70,
+                epochs=config.EPOCH,
                 custom_callbacks=callbacks,
                 layers='heads')
 
