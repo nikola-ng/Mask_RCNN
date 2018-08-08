@@ -88,8 +88,7 @@ class LicensePlateConfig(Config):
     # LEARNING_RATE = 0.0001
     # EPOCH = 50
     # 50-70
-    LEARNING_RATE = 0.0001
-    LEARNING_MOMENTUM = 0.6
+    LEARNING_RATE = 0.00005
     EPOCH = 70
 
 

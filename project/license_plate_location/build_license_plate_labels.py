@@ -84,7 +84,7 @@ for i, c in enumerate(pl_com):
                                         print(raw_marked_image)
 
                                         # dump label
-                                        file_size = os.path.getsize(img_path)
+                                        file_size = os.path.getsize(raw_marked_image)
                                         il_com[i].add_serial(plate_openalpr + '_{}'.format(img_p), file_size, 'polygon',
                                                              [pt1, pt2, pt3, pt4])
                                 else:
