@@ -12,13 +12,13 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
 
     # Train a new model starting from pre-trained COCO weights
-    python3 car_exam.py train --dataset=/path/to/license_plate/dataset --weights=coco
+    python3 car_exam.py train --dataset=/path/to/car_exam/dataset --weights=coco
 
     # Resume training a model that you had trained earlier
-    python3 car_exam.py train --dataset=/path/to/license_plate/dataset --weights=last
+    python3 car_exam.py train --dataset=/path/to/car_exam/dataset --weights=last
 
     # Train a new model starting from ImageNet weights
-    python3 car_exam.py train --dataset=/path/to/license_plate/dataset --weights=imagenet
+    python3 car_exam.py train --dataset=/path/to/car_exam/dataset --weights=imagenet
 
     # Apply color splash to an image
     python3 car_exam.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
@@ -28,6 +28,8 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
 """
 
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+
 import sys
 import json
 import datetime
@@ -56,22 +58,22 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 
 
-class LicensePlateConfig(Config):
+class CarExamConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "license_plate"
+    NAME = "car_exam"
 
     # NUMBER OF GPUs to use. For CPU training, use 1
-    GPU_COUNT = 4
+    GPU_COUNT = 2
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + license_plate
+    NUM_CLASSES = 1 + 2  # Background + car_exam...
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -81,8 +83,8 @@ class LicensePlateConfig(Config):
 
     # custom history
     # 1-35
-    # LEARNING_RATE = 0.001
-    # EPOCH = 35  # train till EPOCH xx, doesn't mean training another xx EPOCHs
+    LEARNING_RATE = 0.001
+    EPOCH = 35  # train till EPOCH xx, doesn't mean training another xx EPOCHs
     # 35-50
     # LEARNING_RATE = 0.0001
     # EPOCH = 50
@@ -90,23 +92,28 @@ class LicensePlateConfig(Config):
     # LEARNING_RATE = 0.00005
     # EPOCH = 60
     # training from stage 5+
-    LEARNING_RATE = 0.001
-    EPOCH = 100
+    # LEARNING_RATE = 0.001
+    # EPOCH = 100
 
 
 ############################################################
 #  Dataset
 ############################################################
+# OBJ_LIST = ['license_plate', 'tripod', 'car_light', 'car_logo', 'safe_belt', 'people']
+OBJ_LIST = ['license_plate', 'tripod']
 
-class LicensePlateDataset(utils.Dataset):
 
-    def load_license_plate(self, dataset_dir, subset):
-        """Load a subset of the LicensePlate dataset.
+class CarExamDataset(utils.Dataset):
+
+    def load_car_exam(self, dataset_dir, subset):
+        """Load a subset of the CarExam dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("license_plate", 1, "license_plate")
+        # self.add_class("car_exam", 1, "license_plate")
+        for i, obj in enumerate(OBJ_LIST):
+            self.add_class('car_exam', i + 1, obj)
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -145,9 +152,11 @@ class LicensePlateDataset(utils.Dataset):
             try:
                 # old version, dict
                 polygons = [r['shape_attributes'] for r in a['regions'].values()]
+                polygons_labels = [r['region_attributes']['obj'] for r in a['regions'].values()]
             except AttributeError:
                 # new version, list
                 polygons = [r['shape_attributes'] for r in a['regions']]
+                polygons_labels = [r['region_attributes']['obj'] for r in a['regions']]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -157,11 +166,12 @@ class LicensePlateDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "license_plate",
+                "car_exam",
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
-                polygons=polygons)
+                polygons=polygons,
+                polygons_labels=polygons_labels)
 
     def load_mask(self, image_id):
         """Generate instance masks for an image.
@@ -170,9 +180,9 @@ class LicensePlateDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
-        # If not a license_plate dataset image, delegate to parent class.
+        # If not a car_exam dataset image, delegate to parent class.
         image_info = self.image_info[image_id]
-        if image_info["source"] != "license_plate":
+        if image_info["source"] != "car_exam":
             return super(self.__class__, self).load_mask(image_id)
 
         # Convert polygons to a bitmap mask of shape
@@ -180,22 +190,25 @@ class LicensePlateDataset(utils.Dataset):
         info = self.image_info[image_id]
         mask = np.zeros([info["height"], info["width"], len(info["polygons"])],
                         dtype=np.uint8)
+        class_ids = []
         for i, p in enumerate(info["polygons"]):
             try:
                 # Get indexes of pixels inside the polygon and set them to 1
                 rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
                 mask[rr, cc, i] = 1
+                class_ids.append(OBJ_LIST.index(info['polygons_labels'][i]))
             except IndexError:
                 pass
 
         # Return mask, and array of class IDs of each instance. Since we have
         # one class ID only, we return an array of 1s
-        return mask.astype(np.bool), np.ones([mask.shape[-1]], dtype=np.int32)
+        # return mask.astype(np.bool), np.ones([mask.shape[-1]], dtype=np.int32)
+        return mask.astype(np.bool), np.asarray(class_ids, dtype=np.int32)
 
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "license_plate":
+        if info["source"] == "car_exam":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
@@ -204,13 +217,13 @@ class LicensePlateDataset(utils.Dataset):
 def train(model):
     """Train the model."""
     # Training dataset.
-    dataset_train = LicensePlateDataset()
-    dataset_train.load_license_plate(args.dataset, "train")
+    dataset_train = CarExamDataset()
+    dataset_train.load_car_exam(args.dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = LicensePlateDataset()
-    dataset_val.load_license_plate(args.dataset, "val")
+    dataset_val = CarExamDataset()
+    dataset_val.load_car_exam(args.dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -227,8 +240,8 @@ def train(model):
                 learning_rate=config.LEARNING_RATE,
                 epochs=config.EPOCH,
                 custom_callbacks=callbacks,
-                # layers='heads')
-                layers='5+')
+                layers='heads')
+    # layers='5+')
 
 
 def color_splash(image, mask):
@@ -312,13 +325,13 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='Train Mask R-CNN to detect license_plates.')
+        description='Train Mask R-CNN to detect car_exams.')
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'splash'")
     parser.add_argument('-d', '--dataset', required=False,
-                        metavar="/path/to/license_plate/dataset/",
-                        help='Directory of the LicensePlate dataset')
+                        metavar="/path/to/car_exam/dataset/",
+                        help='Directory of the CarExam dataset')
     parser.add_argument('-w', '--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
@@ -347,9 +360,9 @@ if __name__ == '__main__':
 
     # Configurations
     if args.command == "train":
-        config = LicensePlateConfig()
+        config = CarExamConfig()
     else:
-        class InferenceConfig(LicensePlateConfig):
+        class InferenceConfig(CarExamConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1

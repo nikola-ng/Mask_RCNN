@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from mrcnn import model as modellib, utils
-from project.license_plate_location.license_plate import LicensePlateConfig, DEFAULT_LOGS_DIR, color_splash
+from project.license_plate_location.car_exam import LicensePlateConfig, DEFAULT_LOGS_DIR, color_splash
 
 # run on CPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
