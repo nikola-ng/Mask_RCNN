@@ -11,7 +11,7 @@ from mrcnn import model as modellib, utils
 from project.license_plate_location.license_plate import LicensePlateConfig, DEFAULT_LOGS_DIR, color_splash
 
 # run on CPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 
 def draw_poly(img, pt1, pt2, pt3, pt4):
@@ -38,11 +38,11 @@ print("Loading weights ", weights_path)
 model.load_weights(weights_path, by_name=True)
 
 # load image
-TEST_IMAGES_PATH = '../../datasets/license_plate/test/'
-POST_PROCESSED_IMAGES_PATH = '../../datasets/license_plate/post_processed/'
-PLATE_PATH = '../../datasets/license_plate/plate/'
-TEST_JSON_PATH = '../../datasets/license_plate/test/via_region_data.json'
-TEST_RESULT_PATH = '../../datasets/license_plate/evaluation_result_{}.csv'.format(
+TEST_IMAGES_PATH = '../../datasets/car_exam/test/'
+POST_PROCESSED_IMAGES_PATH = '../../datasets/car_exam/post_processed/'
+PLATE_PATH = '../../datasets/car_exam/plate/'
+TEST_JSON_PATH = '../../datasets/car_exam/test/via_region_data.json'
+TEST_RESULT_PATH = '../../datasets/car_exam/evaluation_result_{}.csv'.format(
     model.log_dir.split(os.path.sep)[-1])
 
 JS_FILE = open(TEST_JSON_PATH)
@@ -144,15 +144,15 @@ for p in pl:
                         plate = cv2.warpPerspective(plate, M, (w, h), flags=cv2.INTER_LANCZOS4,
                                                     borderMode=cv2.BORDER_CONSTANT, borderValue=0)
                         plate = cv2.cvtColor(plate, cv2.COLOR_RGB2BGR)
-                        cv2.imencode('.jpg', plate, [cv2.IMWRITE_JPEG_QUALITY, 100])[1].tofile(PLATE_PATH + '/{}'.format(p))
+                        # cv2.imencode('.jpg', plate, [cv2.IMWRITE_JPEG_QUALITY, 100])[1].tofile(PLATE_PATH + '/{}'.format(p))
                         # cv2.drawContours(mask, approx, -1, (128, 128, 128), 2)
                         # cv2.imshow('plate', plate)
                         # cv2.waitKey(0)
 
                 # Save output
                 cv2.imencode('.jpg', splash, [cv2.IMWRITE_JPEG_QUALITY, 100])[1].tofile(POST_PROCESSED_IMAGES_PATH + '/{}'.format(p))
-                # cv2.imshow('Splash', imutils.resize(splash, width=800))
-                # cv2.waitKey(0)
+                cv2.imshow('Splash', imutils.resize(splash, width=800))
+                cv2.waitKey(0)
         else:
             print('Failed to locate')
             RESULT.write('{},0,0,0\n'.format(p))

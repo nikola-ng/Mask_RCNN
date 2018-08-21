@@ -243,7 +243,7 @@ def train(model):
     # layers='5+')
 
 
-def color_splash(image, mask, gaussian_blur=0):
+def color_splash(image, mask):
     """Apply color splash effect.
     image: RGB image [height, width, 3]
     mask: instance segmentation mask [height, width, instance count]
@@ -253,9 +253,6 @@ def color_splash(image, mask, gaussian_blur=0):
     # Make a grayscale copy of the image. The grayscale copy still
     # has 3 RGB channels, though.
     gray = skimage.color.gray2rgb(skimage.color.rgb2gray(image)) * 255
-    # add gaussian_blur
-    if gaussian_blur > 0:
-        gray = cv2.GaussianBlur(gray, gaussian_blur, 0)
     # Copy color pixels from the original color image where mask is set
     if mask.shape[-1] > 0:
         # We're treating all instances as one, so collapse the mask into one layer

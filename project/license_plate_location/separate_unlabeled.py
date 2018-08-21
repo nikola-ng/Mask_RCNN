@@ -1,11 +1,9 @@
-import cv2
 import json
 import os
-import numpy as np
 import shutil
 from sklearn.model_selection import train_test_split
 
-from project.license_plate_location.build_json import ImageLabels
+from tools.build_json import ImageLabels
 
 train_marked_images_path = '/home/admin/github/Mask_RCNN/datasets/license_plate/train'
 val_marked_images_path = '/home/admin/github/Mask_RCNN/datasets/license_plate/val'

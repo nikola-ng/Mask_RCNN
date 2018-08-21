@@ -1,4 +1,3 @@
-import numpy as np
-a = np.ones([5])
-b = np.ones(5)
+a = [1,2]
+d = a.index(0)
 print()
