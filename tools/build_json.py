@@ -1,5 +1,4 @@
 import os
-
 import json
 
 
@@ -18,7 +17,7 @@ class ImageLabels:
 
     def add_serial(self, filename='', size=0,
                    region_type='polygon', region_points=[],
-                   file_attributes={}):
+                   file_attributes={}, obj_name=''):
         # define key
         serial_name = filename + str(size)
         try:
@@ -35,14 +34,16 @@ class ImageLabels:
             self.json_data[serial_name] = serial
 
         # if serial exists, append region directly
-        self.add_regions(serial_name, region_type, region_points)
+        self._add_regions(serial_name, region_points, region_type, obj_name)
 
-    def add_regions(self, serial_name, region_type, region_points):
+    def _add_regions(self, serial_name, region_points, region_type='polygon', obj_name=''):
         region = {'shape_attributes': {},
                   'region_attributes': {}}
         region['shape_attributes']['name'] = region_type
         region['shape_attributes']['all_points_x'] = [p[0] for p in region_points]
         region['shape_attributes']['all_points_y'] = [p[1] for p in region_points]
+
+        region['region_attributes']['obj'] = obj_name
 
         self.json_data[serial_name]['regions'].append(region)
 
@@ -56,8 +57,9 @@ class ImageLabels:
 
 
 if __name__ == '__main__':
-    il = ImageLabels('/home/admin/github/Mask_RCNN/datasets/license_plate/train/via_region_data.json')
-    il.add_serial('广州', 123456, 'polygon', [[1, 1], [2, 2], [3, 4], [45, 99]])
-    il.add_serial('广州', 123456, 'polygon', [[333, 333], [2333, 2333], [31, 41], [415, 919]])
+    il = ImageLabels('./j.json')
+    il.add_serial('广州', 123456, region_points=[[1, 1], [2, 2], [3, 4], [45, 99]], obj_name='city')
+    il.add_serial('广州', 123456, region_points=[[333, 333], [2333, 2333], [31, 41], [415, 919]], obj_name='city')
+    il.add_serial('猴子', 555555, region_points=[[333, 333], [2333, 2333], [31, 41], [415, 919]], obj_name='animal')
     il.update()
     il.close()

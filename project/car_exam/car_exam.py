@@ -26,7 +26,7 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
     # Apply color splash to video using the last weights you trained
     python3 car_exam.py splash --weights=last --video=<URL or path to file>
 """
-
+import cv2
 import os
 from keras.callbacks import EarlyStopping
 
@@ -75,7 +75,7 @@ class CarExamConfig(Config):
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 2  # Background + car_exam...
+    NUM_CLASSES = 1 + 3  # Background + car_exam...
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -96,11 +96,10 @@ class CarExamConfig(Config):
 ############################################################
 # Remember, class id of BG(BackGround) is always 0!!! Remember to add 1 to class ids
 # OBJ_LIST = ['license_plate', 'tripod', 'car_light', 'car_logo', 'safe_belt', 'people']
-OBJ_LIST = ['license_plate', 'tripod']
+OBJ_LIST = ['license_plate', 'tripod', 'fire_extinguisher']
 
 
 class CarExamDataset(utils.Dataset):
-
     def load_car_exam(self, dataset_dir, subset):
         """Load a subset of the CarExam dataset.
         dataset_dir: Root directory of the dataset.
